@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions, generics, status
 
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication # for admin console
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -12,9 +13,11 @@ from knox.models import AuthToken
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 
-from .serializers import UserSerializer, CreateInactiveUserSerializer, VerificationTokenSerializer
+from . import serializers
 from .util import send_email_verification
-from .models import VerificationToken
+from .models import VerificationToken, BirdType, Bird, DropWeight
+
+from . import game
 
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
@@ -26,7 +29,7 @@ class LoginView(KnoxLoginView):
         login(request, user)
         return super(LoginView, self).post(request, format=None)
 
-class ExampleView(APIView):
+class TestView(APIView):
     authentication_classes = [TokenAuthentication,]
     permission_classes = [IsAuthenticated]
 
@@ -37,16 +40,14 @@ class ExampleView(APIView):
         }
         return Response(content)
     
-class RegistrationView(generics.GenericAPIView):
-    queryset = User.objects.all()
-    serializer_class = CreateInactiveUserSerializer
+class RegistrationView(APIView):
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = serializers.CreateInactiveUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
     
-        token = VerificationTokenSerializer(data={})
+        token = serializers.VerificationTokenSerializer(data={})
         token.is_valid()
         token = token.save(user_id=user.id)
 
@@ -54,13 +55,10 @@ class RegistrationView(generics.GenericAPIView):
         #send_email_verification(user.email, token.key)
 
         return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "token": AuthToken.objects.create(user)[1]
+            "user": serializers.UserSerializer(user).data
         })
     
-class verificationView(generics.GenericAPIView):
-    #queryset = User.objects.all()
-    #serializer_class = CreateInactiveUserSerializer
+class VerificationView(APIView):
 
     def post(self, request, *args, **kwargs):
         try:
@@ -76,3 +74,23 @@ class verificationView(generics.GenericAPIView):
 
         return Response(status=status.HTTP_200_OK) 
     
+class BirdTypeViewSet(viewsets.ModelViewSet):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser,]
+
+    queryset = BirdType.objects.all()
+    serializer_class = serializers.BirdTypeSerializer
+
+class BirdViewSet(viewsets.ModelViewSet):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser,]
+
+    queryset = Bird.objects.all()
+    serializer_class = serializers.BirdSerializer
+
+class DropWeightsViewSet(viewsets.ModelViewSet):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser,]
+
+    queryset = DropWeight.objects.all()
+    serializer_class = serializers.DropWeightSerializer

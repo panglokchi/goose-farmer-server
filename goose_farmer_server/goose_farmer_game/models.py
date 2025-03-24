@@ -28,7 +28,8 @@ class Token(models.Model):
 class VerificationToken(Token):
     pass
 
-class Player(User):
+class Player(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     exp = models.PositiveIntegerField(default=0)
     level = models.PositiveIntegerField(default=1)
     eggs = models.DecimalField(default=0, validators=[MinValueValidator(0)], decimal_places=2, max_digits=4)

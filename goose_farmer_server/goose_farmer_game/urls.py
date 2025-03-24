@@ -2,7 +2,7 @@ from django.urls import path
 from goose_farmer_game import views
 from knox import views as knox_views
 
-from .views import BirdTypeViewSet, BirdViewSet, DropWeightsViewSet
+from .views import BirdTypeViewSet, BirdViewSet, DropWeightsViewSet, SummonBirdView
 
 bird_type_list = BirdTypeViewSet.as_view({
     'get': 'list',
@@ -48,4 +48,5 @@ urlpatterns = [
     path('birds/<int:pk>', bird_detail),
     path('drop-weights/', drop_weight_list),
     path('drop-weights/<int:pk>', drop_weight_detail),
+    path('summon', SummonBirdView.as_view()),
 ]

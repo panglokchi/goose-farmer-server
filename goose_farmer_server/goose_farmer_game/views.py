@@ -43,7 +43,7 @@ class TestView(APIView):
 class RegistrationView(APIView):
 
     def post(self, request, *args, **kwargs):
-        serializer = serializers.CreateInactiveUserSerializer(data=request.data)
+        serializer = serializers.CreateInactivePlayerSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
     
@@ -94,3 +94,31 @@ class DropWeightsViewSet(viewsets.ModelViewSet):
 
     queryset = DropWeight.objects.all()
     serializer_class = serializers.DropWeightSerializer
+
+class SummonBirdView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        if "times" in request.data:
+            times = request.data.get("times")
+        else:
+            times = 1
+        if times > request.user.player.summons:
+            return Response(
+                {"error": "Not enough summons"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        request.user.player.summons -= times
+        request.user.player.save()
+        birds = []
+        for i in range(times):
+            bird = game.summon_bird(owner = request.user.player)
+            bird.save()
+            birds.append(serializers.BirdSerializer(bird).data)
+        return Response(
+            {"birds": birds},
+            status=status.HTTP_200_OK
+        )
+        
+

@@ -51,6 +51,7 @@ class BirdTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class BirdSerializer(serializers.ModelSerializer):
+    bird_type = BirdTypeSerializer()
     class Meta:
         model = Bird
         fields = '__all__'

@@ -12,31 +12,32 @@ from knox.models import AuthToken
 
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 
 from . import serializers
+from . import game
 from .util import send_email_verification
 from .models import VerificationToken, BirdType, Bird, DropWeight
-
-from . import game
+from .permissions import IsOwnerOrReadOnly
 
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
 
-    def post(self, request, format=None):
+    def post(self, request):
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         login(request, user)
         return super(LoginView, self).post(request, format=None)
 
-class TestView(APIView):
+class ValidateTokenView(APIView):
     authentication_classes = [TokenAuthentication,]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, format=None):
+    def get(self, request):
         content = {
             'user': str(request.user),  # `django.contrib.auth.User` instance.
-            'auth': str(request.auth),  # None
+            'expiry': str(request.auth.expiry),  # None
         }
         return Response(content)
     
@@ -95,6 +96,16 @@ class DropWeightsViewSet(viewsets.ModelViewSet):
     queryset = DropWeight.objects.all()
     serializer_class = serializers.DropWeightSerializer
 
+class PlayerBirdsView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = serializers.BirdSerializer
+        birds = Bird.objects.filter(owner_id=request.user.player).select_related('bird_type').select_related('owner')
+        birds_json = serializer(birds, many=True).data
+        return Response(birds_json)
+
 class SummonBirdView(APIView):
     authentication_classes = [TokenAuthentication,]
     permission_classes = [IsAuthenticated]
@@ -120,5 +131,32 @@ class SummonBirdView(APIView):
             {"birds": birds},
             status=status.HTTP_200_OK
         )
-        
+    
+class ActivateBirdView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
+    def post(self, request, *args, **kwargs):
+        try:
+            bird = Bird.objects.get(pk=request.data.get("bird_id"))
+            if self.check_object_permissions(self.request, bird) == False:
+                raise PermissionDenied()
+
+            if request.data.get("active") == True:
+                assigned_birds = Bird.objects.filter(owner = request.user.player, assigned_to_coop = True).count()
+                if assigned_birds >= 6:
+                    raise Exception("Too many birds assigned")
+                else:
+                    bird.assigned_to_coop = True;
+                    bird.save()
+
+            if request.data.get("active") == False:
+                bird.assigned_to_coop = False;
+                bird.save()
+
+            return Response(status=status.HTTP_200_OK)
+                    
+        except Bird.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)

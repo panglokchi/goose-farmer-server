@@ -62,7 +62,7 @@ class Bird(models.Model):
     health = models.PositiveIntegerField(default=100)
     stars = models.CharField(default=3)
     exp = models.PositiveIntegerField(default=0)
-    level = models.PositiveIntegerField(default=0)
+    level = models.PositiveIntegerField(default=1)
     is_new = models.BooleanField(default=True)
     assigned_to_coop = models.BooleanField(default=False)
 

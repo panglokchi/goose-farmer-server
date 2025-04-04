@@ -54,3 +54,6 @@ urlpatterns += [
     path('player/birds/', views.PlayerBirdsView.as_view()),
     path('player/activate-bird', views.ActivateBirdView.as_view())
 ]
+
+
+from . import jobs

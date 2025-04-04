@@ -52,6 +52,11 @@ class BirdTypeSerializer(serializers.ModelSerializer):
 
 class BirdSerializer(serializers.ModelSerializer):
     bird_type = BirdTypeSerializer()
+    egg_timer = serializers.SerializerMethodField()
+    
+    def get_egg_timer(self, obj):
+        return obj.egg_timer.total_seconds()
+
     class Meta:
         model = Bird
         fields = '__all__'

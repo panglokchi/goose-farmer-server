@@ -17,7 +17,7 @@ from django.core.exceptions import PermissionDenied
 from . import serializers
 from . import game
 from .util import send_email_verification
-from .models import VerificationToken, BirdType, Bird, DropWeight
+from .models import VerificationToken, BirdType, Bird, DropWeight, Player
 from .permissions import IsOwnerOrReadOnly
 
 class LoginView(KnoxLoginView):
@@ -128,7 +128,7 @@ class SummonBirdView(APIView):
             bird.save()
             birds.append(serializers.BirdSerializer(bird).data)
         return Response(
-            {"birds": birds},
+            birds,
             status=status.HTTP_200_OK
         )
     
@@ -160,3 +160,24 @@ class ActivateBirdView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        
+class PlayerView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = serializers.PlayerSerializerFull
+        return Response(serializer(request.user.player).data)
+
+    def post(self, request, *args, **kwargs):
+        if (request.user.player.user.username == request.data.get("username")):
+            serializer = serializers.PlayerSerializerFull
+            return Response(serializer(request.user.player).data)
+        else:
+            try:
+                user = User.objects.get(username = request.data.get("username"))
+                player = user.player
+                serializer = serializers.PlayerSerializer
+                return Response(serializer(player).data)
+            except User.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)

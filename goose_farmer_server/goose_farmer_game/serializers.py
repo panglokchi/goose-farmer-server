@@ -32,13 +32,27 @@ class CreateInactivePlayerSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username',)
+        fields = ('username', 'last_login', 'date_joined')
 
     def create(self, validated_data):
         user = User.objects.create_user(validated_data['username'],
                                         None,
                                         validated_data['password'])
         return user
+
+class PlayerSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Player
+        fields = ('user', 'level',)
+
+class PlayerSerializerFull(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Player
+        fields = ('user', 'exp', 'level', 'eggs', 'coop_level', 'summons', 'feed',)
 
 class VerificationTokenSerializer(serializers.ModelSerializer):
     class Meta:

@@ -161,16 +161,33 @@ class ActivateBirdView(APIView):
         except PermissionDenied:
             return Response(status=status.HTTP_403_FORBIDDEN)
         
+class FeedBirdView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def post(self, request):
+        try:
+            bird = Bird.objects.get(pk=request.data.get("bird_id"))
+            if self.check_object_permissions(self.request, bird) == False:
+                raise PermissionDenied()
+
+            bird.feed(request.data.get("amount"))
+            bird.save()
+
+            serializer = serializers.BirdSerializer
+            return Response(serializer(bird).data, status=status.HTTP_200_OK)
+                    
+        except Bird.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
 class PlayerView(APIView):
     authentication_classes = [TokenAuthentication,]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = serializers.PlayerSerializerFull
-        return Response(serializer(request.user.player).data)
-
-    def post(self, request, *args, **kwargs):
-        if (request.user.player.user.username == request.data.get("username")):
+        if ("username" not in request.data or request.user.player.user.username == request.data.get("username")):
             serializer = serializers.PlayerSerializerFull
             return Response(serializer(request.user.player).data)
         else:

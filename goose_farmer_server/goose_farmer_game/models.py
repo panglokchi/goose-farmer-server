@@ -67,23 +67,23 @@ class Bird(models.Model):
     assigned_to_coop = models.BooleanField(default=False)
 
     def __get_exp_multipler(self):
-        if self.rarity == RARITY.COMMON:
+        if self.rarity == RARITY.COMMON.name:
             return 0.5
-        if self.rarity == RARITY.RARE:
+        if self.rarity == RARITY.RARE.name:
             return 1
-        if self.rarity == RARITY.EPIC:
+        if self.rarity == RARITY.EPIC.name:
             return 1.5
-        if self.rarity == RARITY.LEGENDARY:
+        if self.rarity == RARITY.LEGENDARY.name:
             return 2
     
     def __get_egg_multiplier(self):
-        if self.rarity == RARITY.COMMON:
+        if self.rarity == RARITY.COMMON.name:
             return 1
-        if self.rarity == RARITY.RARE:
+        if self.rarity == RARITY.RARE.name:
             return 2
-        if self.rarity == RARITY.EPIC:
+        if self.rarity == RARITY.EPIC.name:
             return 3
-        if self.rarity == RARITY.LEGENDARY:
+        if self.rarity == RARITY.LEGENDARY.name:
             return 4
 
     @property
@@ -97,6 +97,15 @@ class Bird(models.Model):
     @property
     def egg_amount(self):
         return self.level * self.__get_egg_multiplier()
+    
+    def feed(self, amount):
+        if self.owner.feed < amount:
+            raise Exception("Not enough feed")
+        self.owner.feed -= amount;
+        self.owner.save()
+        self.exp += 20 * amount;
+        while(self.exp > self.next_level_exp):
+            self.level += 1
 
 class DropWeight(models.Model):
     bird_type = models.ForeignKey(BirdType, related_name='drop_weights', on_delete=models.CASCADE)

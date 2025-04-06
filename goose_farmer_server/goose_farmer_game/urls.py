@@ -53,8 +53,6 @@ urlpatterns = [
 urlpatterns += [
     path('player/birds/', views.PlayerBirdsView.as_view()),
     path('player/activate-bird', views.ActivateBirdView.as_view()),
-    path('player/', views.PlayerView.as_view())
+    path('player/', views.PlayerView.as_view()),
+    path('player/feed-bird', views.FeedBirdView.as_view())
 ]
-
-
-from . import jobs

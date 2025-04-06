@@ -5,7 +5,6 @@ from datetime import timedelta
 
 
 def update_egg_timers(delta = timedelta(seconds=60)):
-    print("aa")
     birds_to_update = models.Bird.objects.filter(
         assigned_to_coop = True,
         #egg_timer__gte=delta

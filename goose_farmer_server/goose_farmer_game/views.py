@@ -22,6 +22,7 @@ from .permissions import IsOwnerOrReadOnly
 
 import math
 import decimal
+from datetime import timedelta
 
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
@@ -128,6 +129,7 @@ class SummonBirdView(APIView):
         birds = []
         for i in range(times):
             bird = game.summon_bird(owner = request.user.player)
+            bird.egg_timer = bird.egg_timer_max
             bird.save()
             birds.append(serializers.BirdSerializer(bird).data)
         return Response(
@@ -201,6 +203,33 @@ class ReleaseBirdView(APIView):
             bird.delete()
             return Response({
                 "feed": feed_gain,
+            }, status=status.HTTP_200_OK)
+                    
+        except Bird.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+class CollectEggsView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def post(self, request):
+        try:
+            bird = Bird.objects.get(pk=request.data.get("bird_id"))
+            if self.check_object_permissions(self.request, bird) == False:
+                raise PermissionDenied()
+            
+            if bird.egg_timer > timedelta(seconds=60):
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            egg_amount = bird.egg_amount
+            bird.egg_timer = bird.egg_timer_max
+            bird.save()
+            bird.owner.eggs += egg_amount
+            bird.owner.save()
+            return Response({
+                "eggs": egg_amount,
             }, status=status.HTTP_200_OK)
                     
         except Bird.DoesNotExist:

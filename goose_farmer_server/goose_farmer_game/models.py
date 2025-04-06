@@ -32,7 +32,7 @@ class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="player")
     exp = models.PositiveIntegerField(default=0)
     level = models.PositiveIntegerField(default=1)
-    eggs = models.DecimalField(default=0, validators=[MinValueValidator(0)], decimal_places=2, max_digits=4)
+    eggs = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     coop_level = models.IntegerField(default=1)
     summons = models.IntegerField(default=0)
     feed = models.IntegerField(default=0)
@@ -118,7 +118,7 @@ class Bird(models.Model):
         self.owner.feed -= amount;
         self.owner.save()
         self.exp += 20 * amount;
-        while(self.exp > self.next_level_exp):
+        while(self.exp >= self.next_level_exp):
             self.level += 1
 
     def reset_egg_timer(self):

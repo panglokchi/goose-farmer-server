@@ -71,9 +71,11 @@ class BirdSerializer(serializers.ModelSerializer):
     last_level_exp = serializers.SerializerMethodField()
     next_level_exp = serializers.SerializerMethodField()
     egg_amount = serializers.SerializerMethodField()
+    egg_timer_max = serializers.SerializerMethodField()
+
     
-    def get_egg_timer(self, obj):
-        return obj.egg_timer.total_seconds()
+    def get_egg_timer(self, object):
+        return object.egg_timer.total_seconds()
     
     def get_last_level_exp(self, object):
         return object.last_level_exp
@@ -83,6 +85,9 @@ class BirdSerializer(serializers.ModelSerializer):
     
     def get_egg_amount(self, object):
         return object.egg_amount
+    
+    def get_egg_timer_max(self, object):
+        return object.egg_timer_max.total_seconds()
 
     class Meta:
         model = Bird

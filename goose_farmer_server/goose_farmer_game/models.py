@@ -85,6 +85,16 @@ class Bird(models.Model):
             return 3
         if self.rarity == RARITY.LEGENDARY.name:
             return 4
+        
+    def __get_timer_multiplier(self):
+        if self.rarity == RARITY.COMMON.name:
+            return 1
+        if self.rarity == RARITY.RARE.name:
+            return 8
+        if self.rarity == RARITY.EPIC.name:
+            return 12
+        if self.rarity == RARITY.LEGENDARY.name:
+            return 24
 
     @property
     def last_level_exp(self):
@@ -96,7 +106,11 @@ class Bird(models.Model):
 
     @property
     def egg_amount(self):
-        return self.level * self.__get_egg_multiplier()
+        return self.level * self.__get_egg_multiplier() * self.__get_timer_multiplier()
+    
+    @property
+    def egg_timer_max(self):
+        return timedelta(hours=1) * self.__get_timer_multiplier()
     
     def feed(self, amount):
         if self.owner.feed < amount:
@@ -106,6 +120,10 @@ class Bird(models.Model):
         self.exp += 20 * amount;
         while(self.exp > self.next_level_exp):
             self.level += 1
+
+    def reset_egg_timer(self):
+        self.egg_timer = self.egg_timer_max + self.egg_timer
+        self.save()
 
 class DropWeight(models.Model):
     bird_type = models.ForeignKey(BirdType, related_name='drop_weights', on_delete=models.CASCADE)

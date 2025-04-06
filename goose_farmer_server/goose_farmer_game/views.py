@@ -20,6 +20,9 @@ from .util import send_email_verification
 from .models import VerificationToken, BirdType, Bird, DropWeight, Player
 from .permissions import IsOwnerOrReadOnly
 
+import math
+import decimal
+
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
 
@@ -176,6 +179,29 @@ class FeedBirdView(APIView):
 
             serializer = serializers.BirdSerializer
             return Response(serializer(bird).data, status=status.HTTP_200_OK)
+                    
+        except Bird.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+class ReleaseBirdView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def post(self, request):
+        try:
+            bird = Bird.objects.get(pk=request.data.get("bird_id"))
+            if self.check_object_permissions(self.request, bird) == False:
+                raise PermissionDenied()
+
+            feed_gain = math.floor(bird.weight * bird.egg_amount * decimal.Decimal(0.8))
+            bird.owner.feed += feed_gain
+            bird.owner.save()
+            bird.delete()
+            return Response({
+                "feed": feed_gain,
+            }, status=status.HTTP_200_OK)
                     
         except Bird.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)

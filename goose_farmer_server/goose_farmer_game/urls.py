@@ -58,4 +58,5 @@ urlpatterns += [
     path('player/release-bird', views.ReleaseBirdView.as_view()),
     path('player/collect-eggs', views.CollectEggsView.as_view()),
     path('player/set-bird-not-new', views.SetBirdAsNotNew.as_view()),
+    path('player/missions/', views.MissionView.as_view()),
 ]

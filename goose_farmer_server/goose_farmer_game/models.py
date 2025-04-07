@@ -7,7 +7,7 @@ from datetime import timedelta
 import binascii
 from os import urandom as generate_bytes
 
-from .defines import RARITY, EXP_REQUIRED
+from .defines import RARITY, REPEAT, EXP_REQUIRED
 
 from django.contrib.auth.models import User
 User._meta.get_field('email')._unique = True
@@ -98,11 +98,11 @@ class Bird(models.Model):
 
     @property
     def last_level_exp(self):
-        return EXP_REQUIRED[self.level-1]*self.__get_exp_multipler()
+        return int(EXP_REQUIRED[self.level-1]*self.__get_exp_multipler())
 
     @property
     def next_level_exp(self):
-        return EXP_REQUIRED[self.level]*self.__get_exp_multipler()
+        return int(EXP_REQUIRED[self.level]*self.__get_exp_multipler())
 
     @property
     def egg_amount(self):
@@ -140,6 +140,7 @@ class Mission(models.Model):
     name = models.TextField()
     description = models.TextField(blank=True)
     expiry = models.DateTimeField(blank=True, null=True)
+    repeat = models.CharField(choices=REPEAT.choices())
     exp_reward = models.PositiveBigIntegerField(default=0)
     egg_reward = models.PositiveBigIntegerField(default=0)
     feed_reward = models.PositiveBigIntegerField(default=0)

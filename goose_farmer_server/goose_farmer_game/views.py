@@ -17,7 +17,7 @@ from django.core.exceptions import PermissionDenied
 from . import serializers
 from . import game
 from .util import send_email_verification
-from .models import VerificationToken, BirdType, Bird, DropWeight, Player
+from .models import VerificationToken, BirdType, Bird, DropWeight, Player, Mission, MissionObjective
 from .permissions import IsOwnerOrReadOnly
 
 import math
@@ -275,3 +275,14 @@ class PlayerView(APIView):
                 return Response(serializer(player).data)
             except User.DoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
+            
+class MissionView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        player = request.user.player
+        missions = Mission.objects.filter(player = player)
+        serializer = serializers.MissionSerializer
+        missions_json = serializer(missions, many=True).data
+        return Response(missions_json)

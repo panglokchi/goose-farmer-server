@@ -20,6 +20,16 @@ class RARITY(Enum):
             return 5
         if instance is cls.LEGENDARY:
             return 6
+        
+class REPEAT(Enum):
+    NONE = "none"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+    @classmethod
+    def choices(cls):
+        return tuple((i.name, i.value) for i in cls)
 
 EXP_REQUIRED = [
     0, 100, 205, 316, 432, 553, 681, 815, 955, 1103, 1258, 1421, 1592, 1772, 1960,

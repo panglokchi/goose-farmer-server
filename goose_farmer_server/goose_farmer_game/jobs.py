@@ -36,7 +36,7 @@ def update_daily_missions():
             name="Log In",
             description="Log in to the game",
             repeat=REPEAT.DAILY.name,
-            exp_reward=100,
+            exp_reward=20,
             egg_reward=10,
             feed_reward=10,
             summon_reward=1
@@ -53,7 +53,7 @@ def update_daily_missions():
             name="Summon a Bird",
             description="Summon a bird to your farm",
             repeat=REPEAT.DAILY.name,
-            exp_reward=100,
+            exp_reward=20,
             egg_reward=0,
             feed_reward=0,
             summon_reward=3
@@ -70,7 +70,7 @@ def update_daily_missions():
             name="Feed a Bird",
             description="Early bird gets the worm",
             repeat=REPEAT.DAILY.name,
-            exp_reward=100,
+            exp_reward=20,
             egg_reward=0,
             feed_reward=20,
             summon_reward=0
@@ -87,7 +87,7 @@ def update_daily_missions():
             name="Release a Bird",
             description="See me fly, I'm proud to fly up high",
             repeat=REPEAT.DAILY.name,
-            exp_reward=100,
+            exp_reward=20,
             egg_reward=0,
             feed_reward=0,
             summon_reward=5

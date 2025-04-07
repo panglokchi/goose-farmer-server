@@ -49,10 +49,18 @@ class PlayerSerializer(serializers.ModelSerializer):
 
 class PlayerSerializerFull(serializers.ModelSerializer):
     user = UserSerializer()
+    last_level_exp = serializers.SerializerMethodField()
+    next_level_exp = serializers.SerializerMethodField()
+
+    def get_last_level_exp(self, object):
+        return object.last_level_exp
+
+    def get_next_level_exp(self, object):
+        return object.next_level_exp
 
     class Meta:
         model = Player
-        fields = ('user', 'exp', 'level', 'eggs', 'coop_level', 'summons', 'feed',)
+        fields = ('user', 'exp', 'level', 'eggs', 'coop_level', 'summons', 'feed', 'last_level_exp', 'next_level_exp')
 
 class VerificationTokenSerializer(serializers.ModelSerializer):
     class Meta:

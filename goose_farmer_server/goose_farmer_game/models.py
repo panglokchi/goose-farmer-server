@@ -37,6 +37,14 @@ class Player(models.Model):
     summons = models.IntegerField(default=0)
     feed = models.IntegerField(default=0)
 
+    @property
+    def last_level_exp(self):
+        return EXP_REQUIRED[self.level-1];
+
+    @property
+    def next_level_exp(self):
+        return EXP_REQUIRED[self.level];
+
     def add_exp(self, amount):
         self.exp += amount
         while(self.exp >= EXP_REQUIRED[self.level]):

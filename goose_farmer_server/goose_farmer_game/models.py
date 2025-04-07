@@ -37,6 +37,11 @@ class Player(models.Model):
     summons = models.IntegerField(default=0)
     feed = models.IntegerField(default=0)
 
+    def add_exp(self, amount):
+        self.exp += amount
+        while(self.exp >= EXP_REQUIRED[self.level]):
+            self.level += 1
+
 class BirdType(models.Model):
     name = models.TextField()
     species = models.TextField()
@@ -146,9 +151,29 @@ class Mission(models.Model):
     feed_reward = models.PositiveBigIntegerField(default=0)
     summon_reward = models.PositiveBigIntegerField(default=0)
 
+    @property
+    def complete(self):
+        return self.objectives.filter(progress__lt=models.F('target')).count() == 0
+    
+    def claim(self):
+        if self.complete:
+            self.player.add_exp(self.exp_reward)
+            self.player.eggs += self.egg_reward
+            self.player.feed += self.feed_reward
+            self.player.summons += self.summon_reward
+            self.player.save()
+            self.delete()
+        else:
+            raise Exception("Mission not complete")
+
 class MissionObjective(models.Model):
     mission = models.ForeignKey(Mission, related_name='objectives', on_delete=models.CASCADE)
     name = models.TextField()
     short_name = models.CharField()
     progress = models.PositiveIntegerField(default=0)
     target = models.PositiveIntegerField(default=1)
+
+    def update_progress(self, increment):
+        self.progress = min(self.progress + increment, self.target)
+        self.save()
+

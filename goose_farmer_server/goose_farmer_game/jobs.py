@@ -33,18 +33,69 @@ def update_daily_missions():
     for player in players:
         mission = models.Mission.objects.create(
             player=player,
-            name="Daily Mission",
-            description="Complete your daily mission!",
+            name="Log In",
+            description="Log in to the game",
             repeat=REPEAT.DAILY.name,
             exp_reward=100,
             egg_reward=10,
-            feed_reward=5,
+            feed_reward=10,
             summon_reward=1
         )
         models.MissionObjective.objects.create(
             mission=mission,
-            name="Complete Daily Mission",
-            short_name="Daily",
+            name="Log in",
+            short_name="log_in",
+            progress=1,
+            target=1
+        )
+        mission = models.Mission.objects.create(
+            player=player,
+            name="Summon a Bird",
+            description="Summon a bird to your farm",
+            repeat=REPEAT.DAILY.name,
+            exp_reward=100,
+            egg_reward=0,
+            feed_reward=0,
+            summon_reward=3
+        )
+        models.MissionObjective.objects.create(
+            mission=mission,
+            name="Summon a bird",
+            short_name="summon",
+            progress=0,
+            target=1
+        )
+        mission = models.Mission.objects.create(
+            player=player,
+            name="Feed a Bird",
+            description="Early bird gets the worm",
+            repeat=REPEAT.DAILY.name,
+            exp_reward=100,
+            egg_reward=0,
+            feed_reward=20,
+            summon_reward=0
+        )
+        models.MissionObjective.objects.create(
+            mission=mission,
+            name="Feed a bird",
+            short_name="feed",
+            progress=0,
+            target=1
+        )
+        mission = models.Mission.objects.create(
+            player=player,
+            name="Release a Bird",
+            description="See me fly, I'm proud to fly up high",
+            repeat=REPEAT.DAILY.name,
+            exp_reward=100,
+            egg_reward=0,
+            feed_reward=0,
+            summon_reward=5
+        )
+        models.MissionObjective.objects.create(
+            mission=mission,
+            name="Release a bird",
+            short_name="release",
             progress=0,
             target=1
         )

@@ -100,9 +100,13 @@ class DropWeightSerializer(serializers.ModelSerializer):
 
 class MissionSerializer(serializers.ModelSerializer):
     objectives = serializers.SerializerMethodField()
+    complete = serializers.SerializerMethodField()
 
     def get_objectives(self, object):
         return MissionObjectiveSerializer(object.objectives.all(), many=True).data
+    
+    def get_complete(self, object):
+        return object.complete
     
     class Meta:
         model = Mission

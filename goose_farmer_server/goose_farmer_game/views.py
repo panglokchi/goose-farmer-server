@@ -13,12 +13,13 @@ from knox.models import AuthToken
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.db.models import F
 
 from . import serializers
 from . import game
 from .util import send_email_verification
 from .models import VerificationToken, BirdType, Bird, DropWeight, Player, Mission, MissionObjective
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsRelatedPlayerOrReadOnly
 
 import math
 import decimal
@@ -132,6 +133,10 @@ class SummonBirdView(APIView):
             bird.egg_timer = bird.egg_timer_max
             bird.save()
             birds.append(serializers.BirdSerializer(bird).data)
+            missions = request.user.player.missions.prefetch_related('objectives')
+            
+            for m in missions:
+                m.objectives.filter(short_name="summon", progress__lt=F('target')).update(progress=F('progress')+1)
         return Response(
             birds,
             status=status.HTTP_200_OK
@@ -179,6 +184,11 @@ class FeedBirdView(APIView):
             bird.feed(request.data.get("amount"))
             bird.save()
 
+            missions = request.user.player.missions.prefetch_related('objectives')
+            
+            for m in missions:
+                m.objectives.filter(short_name="feed", progress__lt=F('target')).update(progress=F('progress')+1)
+
             serializer = serializers.BirdSerializer
             return Response(serializer(bird).data, status=status.HTTP_200_OK)
                     
@@ -201,6 +211,12 @@ class ReleaseBirdView(APIView):
             bird.owner.feed += feed_gain
             bird.owner.save()
             bird.delete()
+
+            missions = request.user.player.missions.prefetch_related('objectives')
+            
+            for m in missions:
+                m.objectives.filter(short_name="release", progress__lt=F('target')).update(progress=F('progress')+1)
+
             return Response({
                 "feed": feed_gain,
             }, status=status.HTTP_200_OK)
@@ -286,3 +302,24 @@ class MissionView(APIView):
         serializer = serializers.MissionSerializer
         missions_json = serializer(missions, many=True).data
         return Response(missions_json)
+    
+class ClaimMissionView(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated, IsRelatedPlayerOrReadOnly]
+
+    def post(self, request):
+        try:
+            mission = Mission.objects.get(pk=request.data.get("mission_id"))
+            if self.check_object_permissions(self.request, mission) == False:
+                raise PermissionDenied()
+
+            if mission.complete == False:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            mission.claim()
+            return Response(status=status.HTTP_200_OK)
+                    
+        except Mission.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)

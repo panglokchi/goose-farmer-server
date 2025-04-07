@@ -57,4 +57,5 @@ urlpatterns += [
     path('player/feed-bird', views.FeedBirdView.as_view()),
     path('player/release-bird', views.ReleaseBirdView.as_view()),
     path('player/collect-eggs', views.CollectEggsView.as_view()),
+    path('player/set-bird-not-new', views.SetBirdAsNotNew.as_view()),
 ]

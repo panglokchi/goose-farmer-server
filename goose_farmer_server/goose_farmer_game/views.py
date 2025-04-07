@@ -237,6 +237,28 @@ class CollectEggsView(APIView):
         except PermissionDenied:
             return Response(status=status.HTTP_403_FORBIDDEN)
         
+class SetBirdAsNotNew(APIView):
+    authentication_classes = [TokenAuthentication,]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    
+    def post(self, request):
+        try:
+            bird = Bird.objects.get(pk=request.data.get("bird_id"))
+            if self.check_object_permissions(self.request, bird) == False:
+                raise PermissionDenied()
+            
+            if bird.is_new == False:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            bird.is_new = False
+            bird.save()
+            return Response(status=status.HTTP_200_OK)
+                    
+        except Bird.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
 class PlayerView(APIView):
     authentication_classes = [TokenAuthentication,]
     permission_classes = [IsAuthenticated]

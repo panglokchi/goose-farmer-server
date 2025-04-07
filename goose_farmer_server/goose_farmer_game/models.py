@@ -20,13 +20,16 @@ class Token(models.Model):
     created = models.DateTimeField(auto_now_add=True, blank=True)
     expiry = models.DateTimeField(null=True, blank=True, default=timezone.now()+timedelta(hours=10))
     key = models.CharField(primary_key=True, default=random_string)
-    user = models.ForeignKey('auth.User', related_name='verificationtokens', on_delete = models.CASCADE)
+    user = models.ForeignKey('auth.User', related_name='%(class)s', on_delete = models.CASCADE)
 
     class Meta:
         abstract = True
 
 class VerificationToken(Token):
     pass
+
+class GuestVerificationToken(Token):
+    email = models.EmailField()
 
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="player")

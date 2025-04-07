@@ -39,8 +39,16 @@ drop_weight_detail = views.DropWeightsViewSet.as_view({
 urlpatterns = [
     path('register/', views.RegistrationView.as_view()),
     path('login/', views.LoginView.as_view()),
+    path('logout/', knox_views.LogoutView.as_view()),
+    path('logout-all/', knox_views.LogoutAllView.as_view()),
     path('validate-token/', views.ValidateTokenView.as_view()),
     path('verify/', views.VerificationView.as_view()),
+    path('play-as-guest', views.GuestRegistrationView.as_view()),
+    path('request-guest-verification', views.RequestGuestVerificationView.as_view()),
+    path('guest-verification', views.GuestVerificationView.as_view()),
+]
+
+urlpatterns += [
     path('bird-types/', bird_type_list),
     path('bird-types/<int:pk>', bird_type_detail),
     path('birds/', bird_list),

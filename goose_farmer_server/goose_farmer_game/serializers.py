@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from .models import Player, VerificationToken, BirdType, Bird, DropWeight, Mission, MissionObjective
+from .models import Player, VerificationToken, GuestVerificationToken, BirdType, Bird, DropWeight, Mission, MissionObjective
 
 class CreateInactiveUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +26,19 @@ class CreateInactivePlayerSerializer(serializers.ModelSerializer):
                                         validated_data['email'],
                                         validated_data['password'],
                                         is_active = False)
+        player = Player.objects.create(user=user)
+        return user
+
+class CreateGuestPlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'is_active')
+
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data['username'],
+                                        validated_data['username'],
+                                        None,
+                                        is_active = True)
         player = Player.objects.create(user=user)
         return user
 
@@ -66,6 +79,11 @@ class VerificationTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = VerificationToken
         fields = ['user_id']
+        
+class GuestVerificationTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GuestVerificationToken
+        fields = ['user_id', 'email']
 
 class BirdTypeSerializer(serializers.ModelSerializer):
     class Meta:

@@ -18,6 +18,7 @@ from django.db.models import F
 
 from . import serializers
 from . import game
+from . import jobs
 from .util import send_email_verification
 from .models import VerificationToken, GuestVerificationToken, BirdType, Bird, DropWeight, Player, Mission, MissionObjective
 from .permissions import IsOwnerOrReadOnly, IsRelatedPlayerOrReadOnly
@@ -31,6 +32,7 @@ class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
+        print(request.data)
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -74,7 +76,7 @@ class GuestRegistrationView(APIView):
     def post(self, request, *args, **kwargs):
         username = self.random_username()
         serializer = serializers.CreateGuestPlayerSerializer(data={
-            'username': username,
+            'username': 'guest-' + username,
         })
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -82,8 +84,10 @@ class GuestRegistrationView(APIView):
         instance, token = get_token_model().objects.create(
             user=user, expiry=timedelta(days=7), prefix=token_prefix
         )
+        #print(instance, token)
+        jobs.update_daily_missions(user)
         return Response({
-            "user": serializers.UserSerializer(user).data,
+            "expiry": instance.expiry,
             "token": token
         })
     
@@ -99,6 +103,8 @@ class VerificationView(APIView):
         user.is_active = True
         user.save()
 
+        jobs.update_daily_missions(user)
+
         token.delete()
 
         return Response(status=status.HTTP_200_OK) 
@@ -108,6 +114,8 @@ class RequestGuestVerificationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        if (request.user.player.is_guest == False):
+            return Response(status=status.HTTP_403_FORBIDDEN)
         token = serializers.GuestVerificationTokenSerializer(data={'email': request.data.get("email")})
         token.is_valid()
         token = token.save(user_id=request.user.id)
@@ -115,11 +123,22 @@ class RequestGuestVerificationView(APIView):
 
         return Response(status=status.HTTP_200_OK) 
     
-class GuestVerificationView(APIView):
+class GuestVerificationView(KnoxLoginView):
+    permission_classes = (permissions.AllowAny,)
+
+    def get(self, request, *args, **kwargs):
+        print("a")
+        try:
+            token = GuestVerificationToken.objects.get(pk=request.GET.get('key'))
+        except GuestVerificationToken.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
+        print("b")
         try:
-            token = GuestVerificationToken.objects.get(pk=request.data["key"])
+            token = GuestVerificationToken.objects.get(pk=request.GET.get('key'))
         except GuestVerificationToken.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
@@ -127,11 +146,20 @@ class GuestVerificationView(APIView):
         user.email = token.email
         user.username = user.email
         user.set_password(request.data.get("password"))
-        
         user.save()
+
+        user.player.is_guest = False   
+        user.player.save()
+
         token.delete()
 
-        return Response(status=status.HTTP_200_OK) 
+        request.data["username"] = user.username
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)        
+
+        return super(GuestVerificationView, self).post(request, format=None)
     
 class BirdTypeViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]

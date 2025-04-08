@@ -45,7 +45,7 @@ urlpatterns = [
     path('verify/', views.VerificationView.as_view()),
     path('play-as-guest', views.GuestRegistrationView.as_view()),
     path('request-guest-verification', views.RequestGuestVerificationView.as_view()),
-    path('guest-verification', views.GuestVerificationView.as_view()),
+    path('guest-verification/', views.GuestVerificationView.as_view()),
 ]
 
 urlpatterns += [

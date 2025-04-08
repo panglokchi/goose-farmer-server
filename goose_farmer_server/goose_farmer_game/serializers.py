@@ -39,7 +39,7 @@ class CreateGuestPlayerSerializer(serializers.ModelSerializer):
                                         validated_data['username'],
                                         None,
                                         is_active = True)
-        player = Player.objects.create(user=user)
+        player = Player.objects.create(user=user, is_guest=True)
         return user
 
 class UserSerializer(serializers.ModelSerializer):
@@ -73,7 +73,7 @@ class PlayerSerializerFull(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ('user', 'exp', 'level', 'eggs', 'coop_level', 'summons', 'feed', 'last_level_exp', 'next_level_exp')
+        fields = ('user', 'exp', 'level', 'eggs', 'coop_level', 'summons', 'feed', 'last_level_exp', 'next_level_exp', 'is_guest')
 
 class VerificationTokenSerializer(serializers.ModelSerializer):
     class Meta:

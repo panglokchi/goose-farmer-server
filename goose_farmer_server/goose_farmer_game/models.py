@@ -39,6 +39,7 @@ class Player(models.Model):
     coop_level = models.IntegerField(default=1)
     summons = models.IntegerField(default=0)
     feed = models.IntegerField(default=0)
+    is_guest = models.BooleanField(default=False);
 
     @property
     def last_level_exp(self):

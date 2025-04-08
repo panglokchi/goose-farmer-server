@@ -18,18 +18,27 @@ def update_egg_timers(delta = timedelta(seconds=60)):
         birds_to_update, ['egg_timer']
     )
 
-def update_daily_missions():
-    missions_to_delete = models.Mission.objects.filter(
-        repeat=REPEAT.DAILY.name
-    ).prefetch_related('objectives')
+def update_daily_missions(user=None):
+    if (user is None):
+        missions_to_delete = models.Mission.objects.filter(
+            repeat=REPEAT.DAILY.name
+        ).prefetch_related('objectives')
+    else:
+        missions_to_delete = models.Mission.objects.filter(
+            player=user.player,
+            repeat=REPEAT.DAILY.name
+        ).prefetch_related('objectives')
 
     for m in missions_to_delete:
         # Delete all objectives related to the mission
         m.objectives.all().delete()
+        missions_to_delete.delete()
 
-    missions_to_delete.delete()
+    if (user is None):
+        players = models.Player.objects.all()
+    else:
+        players = [models.Player.objects.get(user=user)]
 
-    players = models.Player.objects.all()
     for player in players:
         mission = models.Mission.objects.create(
             player=player,

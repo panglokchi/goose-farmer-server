@@ -62,7 +62,12 @@ class RegistrationView(APIView):
         token = token.save(user_id=user.id)
 
         print(user.email, token.key)
-        #send_email_verification(user.email, token.key)
+        send_email_verification(user.email, token.key)
+
+        #  TBD
+        user.is_active = True
+        user.save()
+        jobs.update_daily_missions(user)
 
         return Response({
             "user": serializers.UserSerializer(user).data
@@ -119,7 +124,7 @@ class RequestGuestVerificationView(APIView):
         token = serializers.GuestVerificationTokenSerializer(data={'email': request.data.get("email")})
         token.is_valid()
         token = token.save(user_id=request.user.id)
-        #send_email_verification(user.email, token.key)
+        send_email_verification(request.data.get("email"), token.key)
 
         return Response(status=status.HTTP_200_OK) 
     
